@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="th">
   <head>
@@ -17,14 +18,27 @@
       h1, h2, h3, h4, h5, h6, button, input, select, textarea {
         font-family: 'Prompt', sans-serif;
       }
-      /* Custom Scrollbar */
       ::-webkit-scrollbar { width: 8px; height: 8px; }
       ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
       ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
       ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
       @keyframes bounce { 0%, 100% { transform: translateY(-5%); } 50% { transform: translateY(0); } }
     </style>
-  </head>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "recharts": "https://aistudiocdn.com/recharts@^3.4.1",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/",
+    "vite": "https://aistudiocdn.com/vite@^7.2.4",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
+  }
+}
+</script>
+</head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

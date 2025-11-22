@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Login from './views/Login';
@@ -14,6 +13,7 @@ import Stats from './views/Stats';
 import { Student, Question, Teacher, Subject, ExamResult, Assignment } from './types';
 import { fetchAppData, saveScore } from './services/api';
 import { Loader2 } from 'lucide-react';
+import { MOCK_STUDENTS, MOCK_QUESTIONS } from './constants';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<Student | null>(null);
@@ -30,15 +30,48 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
     const initData = async () => {
-      const data = await fetchAppData();
-      setStudents(data.students);
-      setQuestions(data.questions);
-      setExamResults(data.results);
-      setAssignments(data.assignments); 
-      setIsLoading(false);
+      console.log("System Starting...");
+      
+      // ✅ ระบบกันค้าง: ถ้าโหลดนานเกิน 2.5 วินาที ให้ตัดจบและเข้าหน้า Login ทันที
+      const safetyTimer = setTimeout(() => {
+        if (isMounted && isLoading) {
+          console.warn("Loading taking too long, switching to fallback data...");
+          setStudents(MOCK_STUDENTS);
+          setQuestions(MOCK_QUESTIONS);
+          setIsLoading(false);
+        }
+      }, 2500);
+
+      try {
+        const data = await fetchAppData();
+        if (isMounted) {
+          clearTimeout(safetyTimer); // ถ้าโหลดเสร็จก่อน ก็ยกเลิกตัวจับเวลา
+          
+          if (data.students.length > 0) {
+             setStudents(data.students);
+             setQuestions(data.questions);
+             setExamResults(data.results);
+             setAssignments(data.assignments);
+          } else {
+             setStudents(MOCK_STUDENTS);
+             setQuestions(MOCK_QUESTIONS);
+          }
+          
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error("Failed to load data", error);
+        if (isMounted) {
+           setStudents(MOCK_STUDENTS);
+           setQuestions(MOCK_QUESTIONS);
+           setIsLoading(false);
+        }
+      }
     };
     initData();
+    return () => { isMounted = false; };
   }, []);
 
   const handleLogin = (student: Student) => { setCurrentUser(student); setCurrentPage('dashboard'); };
@@ -61,7 +94,12 @@ const App: React.FC = () => {
   const handleSelectSubject = (subject: Subject) => { setSelectedSubject(subject); setCurrentAssignment(null); setCurrentPage('practice'); };
   const handleStartAssignment = (assignment: Assignment) => { setCurrentAssignment(assignment); setSelectedSubject(assignment.subject); setCurrentPage('practice'); };
 
-  if (isLoading) return <div className="flex flex-col items-center justify-center min-h-[80vh] text-blue-600"><Loader2 className="animate-spin mb-4" size={48} /><p className="text-lg font-bold">กำลังโหลดข้อมูล...</p></div>;
+  if (isLoading) return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-blue-50 text-blue-600">
+      <Loader2 className="animate-spin mb-4" size={48} />
+      <p className="text-lg font-bold">กำลังเตรียมข้อมูล...</p>
+    </div>
+  );
 
   if (currentPage === 'teacher-login') return <TeacherLogin onLoginSuccess={handleTeacherLoginSuccess} onBack={() => setCurrentPage('login')} />;
   if (currentPage === 'teacher-dashboard' && currentTeacher) return <TeacherDashboard teacher={currentTeacher} onLogout={handleLogout} onStartGame={() => setCurrentPage('game-setup')} />;
@@ -70,6 +108,7 @@ const App: React.FC = () => {
       const teacherAsStudent: Student = { id: '99999', name: currentTeacher.name, school: currentTeacher.school, avatar: '👨‍🏫', stars: 0 };
       return <GameMode student={teacherAsStudent} onExit={() => setCurrentPage('teacher-dashboard')} />;
   }
+  
   if (currentPage === 'login' && !currentUser) return <Login onLogin={handleLogin} onTeacherLoginClick={() => setCurrentPage('teacher-login')} students={students} />;
 
   return (

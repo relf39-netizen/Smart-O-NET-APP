@@ -46,7 +46,7 @@ const GameMode: React.FC<GameModeProps> = ({ student, onExit }) => {
     setIsMuted(false);
     toggleMuteSystem(false);
     playBGM('LOBBY'); 
-    speak("ยินดีต้อนรับสู่สนามสอบครับ");
+    speak("ยินดีต้อนรับสู่เกมสอบแข่งขันครับ");
   };
 
   // จัดการเสียงตามสถานะเกม

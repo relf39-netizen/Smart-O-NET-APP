@@ -34,6 +34,11 @@ const GameMode: React.FC<GameModeProps> = ({ student, onExit }) => {
     const newState = !isMuted;
     setIsMuted(newState);
     toggleMuteSystem(newState);
+    
+    // ถ้ากดเปิดเสียง แล้วสถานะกำลังเล่น ให้เล่นเพลงทันที
+    if (!newState && status === 'PLAYING') {
+        playBGM('GAME');
+    }
   };
 
   const enableAudio = () => {
@@ -41,14 +46,24 @@ const GameMode: React.FC<GameModeProps> = ({ student, onExit }) => {
     setIsMuted(false);
     toggleMuteSystem(false);
     playBGM('LOBBY'); 
+    speak("ยินดีต้อนรับสู่สนามสอบครับ");
   };
 
+  // จัดการเสียงตามสถานะเกม
   useEffect(() => {
     if (!audioEnabled) return;
-    if (status === 'LOBBY') playBGM('LOBBY');
-    else if (status === 'COUNTDOWN') { stopBGM(); playSFX('COUNTDOWN'); }
-    else if (status === 'PLAYING') playBGM('GAME');
-    else if (status === 'FINISHED') playBGM('VICTORY');
+    
+    if (status === 'LOBBY') {
+        playBGM('LOBBY');
+    } else if (status === 'COUNTDOWN') { 
+        stopBGM(); 
+        playSFX('COUNTDOWN'); 
+    } else if (status === 'PLAYING') {
+        playBGM('GAME'); 
+    } else if (status === 'FINISHED') {
+        playBGM('VICTORY');
+    }
+    
     return () => {};
   }, [status, audioEnabled]);
 
@@ -191,6 +206,30 @@ const GameMode: React.FC<GameModeProps> = ({ student, onExit }) => {
 
   if (connectionError) return <div className="p-10 text-center">Connection Error...</div>;
 
+  // 🔊 หน้าจอขออนุญาตใช้เสียง (บังคับ)
+  if (!audioEnabled) {
+    return (
+        <div className="fixed inset-0 bg-gradient-to-br from-blue-600 to-purple-700 z-[999] flex flex-col items-center justify-center p-6 text-white text-center">
+            <div className="bg-white/10 p-6 rounded-full mb-6 animate-bounce">
+                <Volume2 size={64} />
+            </div>
+            <h2 className="text-3xl font-bold mb-4">พร้อมแข่งขันหรือยัง?</h2>
+            <p className="mb-8 text-blue-100 max-w-md">
+                กรุณากดปุ่มด้านล่างเพื่อเข้าสู่ห้องเกม<br/>และเปิดระบบเสียงดนตรี
+            </p>
+            <button 
+                onClick={enableAudio}
+                className="bg-yellow-400 text-yellow-900 px-8 py-4 rounded-full text-xl font-bold shadow-xl hover:scale-105 transition-transform flex items-center gap-3 animate-pulse cursor-pointer"
+            >
+                <Zap fill="currentColor" /> คลิกเพื่อเริ่มเกม (เปิดเสียง)
+            </button>
+            <button onClick={onExit} className="mt-8 text-white/50 underline text-sm">
+                กลับหน้าหลัก
+            </button>
+        </div>
+    );
+  }
+
   if (status === 'LOBBY') {
     return (
       <div className="text-center py-10 min-h-[70vh] flex flex-col justify-center relative">
@@ -222,7 +261,13 @@ const GameMode: React.FC<GameModeProps> = ({ student, onExit }) => {
     const timerColor = timePercent > 50 ? 'bg-green-500' : timePercent > 20 ? 'bg-yellow-500' : 'bg-red-600';
     return (
       <div className="max-w-3xl mx-auto pt-4 pb-20 relative">
-        <button onClick={toggleSound} className={`fixed top-20 right-4 z-50 p-2 rounded-full shadow ${isMuted?'bg-gray-200':'bg-white'}`}>{isMuted?<VolumeX size={20}/>:<Volume2 size={20}/>}</button>
+        {/* ปุ่มเปิด/ปิดเสียง ขณะเล่นเกม */}
+        <button 
+            onClick={toggleSound} 
+            className={`fixed top-20 right-4 z-50 p-2 rounded-full shadow-lg ${isMuted ? 'bg-gray-200 text-gray-500' : 'bg-green-500 text-white animate-pulse'}`}
+        >
+            {isMuted ? <VolumeX size={24}/> : <Volume2 size={24}/>}
+        </button>
         
         <div className="flex items-center gap-4 mb-4 bg-white p-3 rounded-2xl shadow-sm">
             <span className="font-bold text-blue-800 text-sm">ข้อ {currentQuestionIndex+1}/{questions.length}</span>

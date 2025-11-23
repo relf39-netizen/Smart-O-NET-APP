@@ -3,8 +3,13 @@
 
 // --- Sound Assets (ลิงก์เพลงฟรีไม่มีลิขสิทธิ์) ---
 const SOUNDS = {
+    // เพลง Lobby: จังหวะสนุกๆ รอเพื่อน
     BGM_LOBBY: 'https://cdn.pixabay.com/audio/2022/03/15/audio_c8c8a73467.mp3',
-    BGM_GAME: 'https://cdn.pixabay.com/audio/2021/08/09/audio_04d93c2526.mp3',
+    
+    // เพลง Game: จังหวะตื่นเต้น เร้าใจ (เปลี่ยนลิงก์ใหม่ให้โหลดง่ายขึ้น)
+    BGM_GAME: 'https://cdn.pixabay.com/audio/2021/09/06/audio_3719979729.mp3', 
+    
+    // เพลง Victory: ชัยชนะ
     BGM_VICTORY: 'https://cdn.pixabay.com/audio/2021/08/04/audio_12b0cd4862.mp3',
     
     SFX_CORRECT: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.m4a',
@@ -29,7 +34,13 @@ export const speak = (text: string) => {
 
 export const playBGM = (type: 'LOBBY' | 'GAME' | 'VICTORY') => {
     if (isMuted) return;
-    stopBGM();
+    
+    // ถ้าเป็นเพลงเดิมและเล่นอยู่แล้ว ไม่ต้องโหลดใหม่
+    if (bgmAudio && !bgmAudio.paused && bgmAudio.src.includes(type === 'GAME' ? 'audio_3719979729' : 'audio_c8c8a73467')) {
+        return;
+    }
+
+    stopBGM(); // หยุดเพลงเก่า
 
     let src = '';
     switch (type) {
@@ -41,8 +52,14 @@ export const playBGM = (type: 'LOBBY' | 'GAME' | 'VICTORY') => {
     if (src) {
         bgmAudio = new Audio(src);
         bgmAudio.loop = true;
-        bgmAudio.volume = 0.4;
-        bgmAudio.play().catch(e => console.log("Auto-play prevented:", e));
+        bgmAudio.volume = 0.5; // เพิ่มความดังเป็น 50%
+        const playPromise = bgmAudio.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.log("Auto-play prevented. Waiting for user interaction.", error);
+            });
+        }
     }
 };
 
